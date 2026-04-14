@@ -2,7 +2,7 @@ import random
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -166,18 +166,37 @@ def generate_competitive_fraud(
     return events
 
 
-def generate_bot_fraud(
+# =========================
+# generate_bot_fraud_with_theft
+# =========================
+
+def generate_bot_fraud_with_theft(
+    normal_events: List[Event],  # 传入正常流量池用于“窃取”
     num_devices: int = 3,
     clicks_per_device: int = 30,
+    theft_rate: float = 0.35     # 35% 的概率复用真实 IP
 ) -> List[Event]:
+   
     events: List[Event] = []
+    
+    # 提取正常流量中的所有真实 IP 作为“窃取池”
+    stolen_ip_vault = list(set([e.ip for e in normal_events if e.traffic_type == "normal"]))
 
     for i in range(num_devices):
-        device_id = make_device_id("BOT", i)
-        ip = random_ip()
+        device_id = make_device_id("BOT_ADVANCED", i)
+        # 初始仍分配一个机器人专属 IP
+        base_ip = random_ip()
         current_time = START_TIME + timedelta(minutes=random.randint(8, 15))
 
-        for _ in range(clicks_per_device):
+        for click_idx in range(clicks_per_device):
+            # --- 核心改进：IP 复用逻辑 ---
+            # 如果触发窃取概率且池子不为空，则复用真实 IP
+            if stolen_ip_vault and random.random() < theft_rate:
+                active_ip = random.choice(stolen_ip_vault)
+            else:
+                active_ip = base_ip
+            # --------------------------
+
             gap_seconds = random.choice([2, 3, 4])
             current_time += timedelta(seconds=gap_seconds)
             dwell_seconds = random.choice([0, 1])
@@ -186,7 +205,7 @@ def generate_bot_fraud(
                 events=events,
                 click_time=current_time,
                 device_id=device_id,
-                ip=ip,
+                ip=active_ip, # 使用选定的 IP
                 ad_id=TARGET_AD_ID,
                 advertiser_id=TARGET_ADVERTISER_ID,
                 dwell_seconds=dwell_seconds,
@@ -195,12 +214,22 @@ def generate_bot_fraud(
 
     return events
 
+# =========================
+#  build_raw_dataframe 
+# =========================
 
 def build_raw_dataframe() -> pd.DataFrame:
     events: List[Event] = []
-    events.extend(generate_normal_traffic())
+    
+    # 1.generate normal traffic
+    normal_traffic = generate_normal_traffic()
+    events.extend(normal_traffic)
+    
+    # 2.generate_competitive_fraud
     events.extend(generate_competitive_fraud())
-    events.extend(generate_bot_fraud())
+    
+    #3.generate_bot_fraud_with_theft need normal_traffic as input for potential IP theft
+    events.extend(generate_bot_fraud_with_theft(normal_traffic))
 
     df = pd.DataFrame([e.__dict__ for e in events])
     df = df.sort_values("timestamp").reset_index(drop=True)
@@ -369,7 +398,7 @@ def compute_budget_spent(raw_df: pd.DataFrame, cpc: float = 2.0) -> pd.DataFrame
 # 8. Export utilities  [LATEST UPDATE]
 # =========================
 
-def ensure_output_dir(output_dir: Path | str) -> Path:
+def ensure_output_dir(output_dir: Union[Path, str]) -> Path:
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir
@@ -380,7 +409,7 @@ def export_attack_artifacts(
     processed_df: Optional[pd.DataFrame] = None,
     comparison_df: Optional[pd.DataFrame] = None,
     budget_df: Optional[pd.DataFrame] = None,
-    output_dir: Path | str = DEFAULT_OUTPUT_DIR,
+    output_dir: Union[Path, str] = DEFAULT_OUTPUT_DIR,
 ) -> Dict[str, str]:
     """
     [LATEST UPDATE]
@@ -415,7 +444,7 @@ def export_attack_artifacts(
 # 9. Plotting
 # =========================
 
-def plot_click_frequency(raw_df: pd.DataFrame, save_path: Optional[Path | str] = None, show: bool = True) -> None:
+def plot_click_frequency(raw_df: pd.DataFrame, save_path: Optional[Union[Path, str]] = None, show: bool = True) -> None:
     clicks = raw_df[raw_df["event_type"] == "click"].copy()
     clicks["minute"] = clicks["timestamp"].dt.floor("min")
 
@@ -441,7 +470,7 @@ def plot_click_frequency(raw_df: pd.DataFrame, save_path: Optional[Path | str] =
         plt.close()
 
 
-def plot_interval_distribution(raw_df: pd.DataFrame, save_path: Optional[Path | str] = None, show: bool = True) -> None:
+def plot_interval_distribution(raw_df: pd.DataFrame, save_path: Optional[Union[Path, str]] = None, show: bool = True) -> None:
     clicks = raw_df[raw_df["event_type"] == "click"].copy().sort_values(["device_id", "timestamp"])
     clicks["interval_sec"] = clicks.groupby("device_id")["timestamp"].diff().dt.total_seconds()
 
@@ -465,7 +494,7 @@ def plot_interval_distribution(raw_df: pd.DataFrame, save_path: Optional[Path | 
         plt.close()
 
 
-def plot_budget_depletion(budget_df: pd.DataFrame, save_path: Optional[Path | str] = None, show: bool = True) -> None:
+def plot_budget_depletion(budget_df: pd.DataFrame, save_path: Optional[Union[Path, str]] = None, show: bool = True) -> None:
     if budget_df.empty:
         print("No target ad clicks found.")
         return
@@ -490,7 +519,7 @@ def plot_budget_depletion(budget_df: pd.DataFrame, save_path: Optional[Path | st
         plt.close()
 
 
-def plot_budget_bar(raw_df: pd.DataFrame, save_path: Optional[Path | str] = None, show: bool = True) -> None:
+def plot_budget_bar(raw_df: pd.DataFrame, save_path: Optional[Union[Path, str]] = None, show: bool = True) -> None:
     df = compute_budget_spent(raw_df)
 
     plt.figure(figsize=(6, 4))
@@ -511,7 +540,7 @@ def plot_budget_bar(raw_df: pd.DataFrame, save_path: Optional[Path | str] = None
 def save_attack_plots(
     raw_df: pd.DataFrame,
     budget_df: pd.DataFrame,
-    output_dir: Path | str = DEFAULT_OUTPUT_DIR,
+    output_dir: Union[Path, str] = DEFAULT_OUTPUT_DIR,
     show: bool = False,
 ) -> Dict[str, str]:
     """
@@ -546,7 +575,7 @@ def save_attack_plots(
 
 def run_attack_pipeline(
     export_artifacts: bool = False,
-    output_dir: Path | str = DEFAULT_OUTPUT_DIR,
+    output_dir: Union[Path, str] = DEFAULT_OUTPUT_DIR,
     save_plots: bool = False,
     show_plots: bool = False,
 ) -> Dict[str, object]:
