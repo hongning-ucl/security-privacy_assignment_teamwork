@@ -1,0 +1,5 @@
+advertiser_id,ad_id,total_clicks,total_charged,total_withheld,total_refunded,final_budget_left
+ADV1,A1,165,62.0,84.0,0.0,38.0
+ADV2,A2,31,62.0,0.0,0.0,38.0
+ADV3,A3,26,52.0,0.0,0.0,48.0
+ADV4,A4,31,62.0,0.0,0.0,38.0

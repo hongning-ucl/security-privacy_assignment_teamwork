@@ -1,0 +1,8 @@
+traffic_type,billing_action,clicks,charged_amount,withheld_amount,refunded_amount
+bot_fraud,blocked,75,0.0,0.0,0.0
+bot_fraud,withhold,15,0.0,30.0,0.0
+competitive_fraud,cap_block,6,0.0,0.0,0.0
+competitive_fraud,charge,12,24.0,0.0,0.0
+competitive_fraud,withhold,27,0.0,54.0,0.0
+normal,cap_block,11,0.0,0.0,0.0
+normal,charge,107,214.0,0.0,0.0
