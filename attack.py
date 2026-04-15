@@ -179,18 +179,18 @@ def generate_bot_fraud_with_theft(
    
     events: List[Event] = []
     
-    # 提取正常流量中的所有真实 IP 作为“窃取池”
+    
     stolen_ip_vault = list(set([e.ip for e in normal_events if e.traffic_type == "normal"]))
 
     for i in range(num_devices):
         device_id = make_device_id("BOT_ADVANCED", i)
-        # 初始仍分配一个机器人专属 IP
+        
         base_ip = random_ip()
         current_time = START_TIME + timedelta(minutes=random.randint(8, 15))
 
         for click_idx in range(clicks_per_device):
-            # --- 核心改进：IP 复用逻辑 ---
-            # 如果触发窃取概率且池子不为空，则复用真实 IP
+            # IP resuse logic:
+            # if we have a vault of stolen IPs and the random check passes, we pick one from the vault; otherwise, we use a new random IP for this bot device.
             if stolen_ip_vault and random.random() < theft_rate:
                 active_ip = random.choice(stolen_ip_vault)
             else:
@@ -205,7 +205,7 @@ def generate_bot_fraud_with_theft(
                 events=events,
                 click_time=current_time,
                 device_id=device_id,
-                ip=active_ip, # 使用选定的 IP
+                ip=active_ip, 
                 ad_id=TARGET_AD_ID,
                 advertiser_id=TARGET_ADVERTISER_ID,
                 dwell_seconds=dwell_seconds,
