@@ -1,7 +1,7 @@
 device_id,ad_id,advertiser_id,traffic_type,total_clicks,unique_ips,avg_click_interval_sec,avg_dwell_time_sec,click_frequency_label,interval_pattern
-BOT_000,A1,ADV1,bot_fraud,30,1,2.9655172413793105,0.3,High,Regular
-BOT_001,A1,ADV1,bot_fraud,30,1,3.103448275862069,0.6,High,Regular
-BOT_002,A1,ADV1,bot_fraud,30,1,3.0344827586206895,0.5,High,Regular
+BOT_ADVANCED_000,A1,ADV1,bot_fraud,30,11,3.2758620689655173,0.43333333333333335,High,Regular
+BOT_ADVANCED_001,A1,ADV1,bot_fraud,30,13,3.103448275862069,0.8,High,Regular
+BOT_ADVANCED_002,A1,ADV1,bot_fraud,30,7,3.0344827586206895,0.5333333333333333,High,Regular
 CF_000,A1,ADV1,competitive_fraud,9,1,49.75,3.2222222222222223,Low,Irregular
 CF_001,A1,ADV1,competitive_fraud,8,1,45.285714285714285,3.375,Low,Irregular
 CF_002,A1,ADV1,competitive_fraud,7,1,68.83333333333333,4.142857142857143,Low,Irregular

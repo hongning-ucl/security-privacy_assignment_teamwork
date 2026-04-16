@@ -1,5 +1,5 @@
 billing_action,clicks,charged_amount,withheld_amount,refunded_amount
-blocked,75,0.0,0.0,0.0
-cap_block,17,0.0,0.0,0.0
-charge,119,238.0,0.0,0.0
-withhold,42,0.0,84.0,0.0
+blocked,20,0.0,0.0,0.0
+cap_block,60,0.0,0.0,0.0
+charge,118,236.0,0.0,0.0
+withhold,55,0.0,110.0,0.0
