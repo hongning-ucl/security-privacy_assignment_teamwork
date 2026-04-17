@@ -1,0 +1,339 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.wrap{padding:1rem 0}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px}
+.top-bar h2{font-size:16px;font-weight:500;color:var(--color-text-primary)}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+button.ctrl{font-size:12px;padding:6px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;transition:background 0.15s}
+button.ctrl:hover{background:var(--color-background-secondary)}
+button.ctrl.active-t1{background:#FAEEDA;border-color:#BA7517;color:#633806}
+button.ctrl.active-t2{background:#FCEBEB;border-color:#A32D2D;color:#791F1F}
+button.ctrl.stop{background:var(--color-background-secondary)}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.25rem}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:0.85rem 1rem}
+.metric .lbl{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px}
+.metric .val{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.metric .val.red{color:#A32D2D}
+.metric .val.amber{color:#854F0B}
+.metric .val.green{color:#3B6D11}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem}
+.card-title{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+.threat-card{border-radius:var(--border-radius-lg);padding:1rem 1.25rem;border:0.5px solid}
+.threat-card.t1{background:#FAEEDA;border-color:#BA7517}
+.threat-card.t2{background:#FCEBEB;border-color:#E24B4A}
+.threat-card h3{font-size:13px;font-weight:500;margin-bottom:6px}
+.threat-card.t1 h3{color:#633806}
+.threat-card.t2 h3{color:#791F1F}
+.threat-card p{font-size:11px;line-height:1.6}
+.threat-card.t1 p{color:#854F0B}
+.threat-card.t2 p{color:#A32D2D}
+.threat-card .stat{margin-top:8px;font-size:18px;font-weight:500}
+.threat-card.t1 .stat{color:#412402}
+.threat-card.t2 .stat{color:#501313}
+.slider-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.slider-row label{font-size:11px;min-width:60px}
+.threat-card.t1 .slider-row label{color:#854F0B}
+.threat-card.t2 .slider-row label{color:#A32D2D}
+.slider-row input[type=range]{flex:1}
+.slider-row span{font-size:11px;min-width:28px;text-align:right;font-family:var(--font-mono)}
+.threat-card.t1 .slider-row span{color:#633806}
+.threat-card.t2 .slider-row span{color:#791F1F}
+.log-wrap{max-height:220px;overflow-y:auto}
+.log-row{display:grid;grid-template-columns:72px 1fr 70px;gap:6px;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;align-items:center}
+.log-row:last-child{border-bottom:none}
+.log-head{font-weight:500;color:var(--color-text-secondary);font-size:10px;padding-bottom:4px}
+.badge{display:inline-block;font-size:10px;padding:2px 6px;border-radius:999px;font-weight:500;white-space:nowrap}
+.badge.n{background:#EAF3DE;color:#3B6D11}
+.badge.t1{background:#FAEEDA;color:#854F0B}
+.badge.t2{background:#FCEBEB;color:#A32D2D}
+.budget-bar-wrap{height:10px;background:var(--color-background-secondary);border-radius:5px;overflow:hidden;margin-top:6px}
+.budget-bar{height:10px;background:#639922;border-radius:5px;transition:width 0.3s,background 0.3s}
+.stolen-box{background:var(--color-background-danger);border:0.5px solid var(--color-border-danger);border-radius:var(--border-radius-md);padding:8px 10px;margin-top:10px}
+.stolen-box p{font-size:11px;color:var(--color-text-danger);font-weight:500;margin-bottom:5px}
+.stolen-tags{display:flex;flex-wrap:wrap;gap:4px}
+.stolen-tag{background:var(--color-background-primary);border:0.5px solid var(--color-border-danger);border-radius:3px;font-size:10px;padding:1px 6px;color:var(--color-text-danger);font-family:var(--font-mono)}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+.status-dot.idle{background:#B4B2A9}
+.status-dot.running{background:#639922}
+.status-dot.t1on{background:#BA7517}
+.status-dot.t2on{background:#E24B4A}
+@media(max-width:560px){.metrics{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+
+<div class="top-bar">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="status-dot idle" id="statusDot"></span>
+    <h2 id="statusLabel">Simulation idle</h2>
+  </div>
+  <div class="controls">
+    <button class="ctrl" id="btnNormal" onclick="startNormal()">Start normal traffic</button>
+    <button class="ctrl" id="btnT1" onclick="toggleT1()">Launch threat 1</button>
+    <button class="ctrl" id="btnT2" onclick="toggleT2()">Launch threat 2</button>
+    <button class="ctrl stop" onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<div class="metrics">
+  <div class="metric"><div class="lbl">Total clicks</div><div class="val" id="mTotal">0</div></div>
+  <div class="metric"><div class="lbl">Fraud clicks</div><div class="val red" id="mFraud">0</div></div>
+  <div class="metric"><div class="lbl">Budget remaining</div><div class="val green" id="mBudget">$5,000</div></div>
+  <div class="metric"><div class="lbl">Stolen IPs</div><div class="val amber" id="mStolen">0</div></div>
+</div>
+
+<div style="margin-bottom:1.25rem">
+  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">
+    <span>Ad budget</span><span id="budgetPct">100%</span>
+  </div>
+  <div class="budget-bar-wrap"><div class="budget-bar" id="budgetBar" style="width:100%"></div></div>
+</div>
+
+<div class="two-col">
+
+  <div class="threat-card t1">
+    <h3>Threat 1 — competitive click fraud</h3>
+    <p>3 competitor IPs clicking your ads at medium frequency to drain your budget.</p>
+    <div class="stat" id="t1Count">0 clicks sent</div>
+    <div class="slider-row">
+      <label>Rate</label>
+      <input type="range" min="1" max="5" value="2" step="1" id="t1Rate" oninput="document.getElementById('t1RateVal').textContent=this.value+'x'">
+      <span id="t1RateVal">2x</span>
+    </div>
+    <div style="margin-top:8px;font-size:10px;color:#854F0B">IPs: 192.168.1.55 · 192.168.1.56 · 192.168.1.57</div>
+  </div>
+
+  <div class="threat-card t2">
+    <h3>Threat 2 — botnet + identity theft</h3>
+    <p>3 botnet IPs at high frequency, stealing real user IPs from traffic every 15th click.</p>
+    <div class="stat" id="t2Count">0 clicks · 0 IPs stolen</div>
+    <div class="slider-row">
+      <label>Rate</label>
+      <input type="range" min="1" max="5" value="3" step="1" id="t2Rate" oninput="document.getElementById('t2RateVal').textContent=this.value+'x'">
+      <span id="t2RateVal">3x</span>
+    </div>
+    <div style="margin-top:8px;font-size:10px;color:#A32D2D">IPs: 10.0.0.1 · 10.0.0.2 · 10.0.0.3</div>
+    <div class="stolen-box" id="stolenBox" style="display:none">
+      <p>Stolen real user IPs</p>
+      <div class="stolen-tags" id="stolenTags"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Budget depletion</div>
+    <div style="position:relative;height:180px"><canvas id="budgetChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Live event log</div>
+    <div class="log-wrap">
+      <div class="log-row log-head"><span>Time</span><span>IP</span><span>Type</span></div>
+      <div id="logBody"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const BUDGET=5000, CPC=5;
+const T1IPS=['192.168.1.55','192.168.1.56','192.168.1.57'];
+const T2IPS=['10.0.0.1','10.0.0.2','10.0.0.3'];
+
+let budget=BUDGET, totalClicks=0, fraudClicks=0;
+let t1Clicks=0, t2Clicks=0;
+let normalPool=[], stolenSet=new Set();
+let t2SinceLastSteal=0;
+
+let normalTimer=null, t1Timer=null, t2Timer=null;
+let t1Active=false, t2Active=false, normalActive=false;
+
+let chartLabels=[], chartNormal=[], chartT1=[], chartT2=[];
+let chart=null;
+
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function randEl(arr){return arr[ri(0,arr.length-1)];}
+function nowStr(){return new Date().toTimeString().slice(0,8);}
+
+function initChart(){
+  const ctx=document.getElementById('budgetChart');
+  chart=new Chart(ctx,{
+    type:'line',
+    data:{labels:chartLabels,datasets:[
+      {label:'Normal',data:chartNormal,borderColor:'#639922',borderWidth:1.5,pointRadius:0,tension:0,fill:false},
+      {label:'Threat 1',data:chartT1,borderColor:'#EF9F27',borderWidth:1.5,pointRadius:0,tension:0,fill:false},
+      {label:'Threat 2',data:chartT2,borderColor:'#E24B4A',borderWidth:1.5,pointRadius:0,tension:0,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      animation:{duration:0},
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{display:false},
+        y:{min:0,max:BUDGET,ticks:{callback:v=>'$'+v,font:{size:10},maxTicksLimit:5},grid:{color:'rgba(128,128,128,0.1)'}}
+      }
+    }
+  });
+}
+
+function pushChartPoint(type){
+  const t=nowStr();
+  chartLabels.push(t);
+  if(chartLabels.length>80){chartLabels.shift();chartNormal.shift();chartT1.shift();chartT2.shift();}
+  chartNormal.push(type==='n'?budget:null);
+  chartT1.push(type==='t1'?budget:null);
+  chartT2.push(type==='t2'?budget:null);
+  if(chart)chart.update('none');
+}
+
+function spendCPC(){
+  if(budget<=0)return false;
+  budget=Math.max(0,budget-CPC);
+  totalClicks++;
+  updateMetrics();
+  return true;
+}
+
+function updateMetrics(){
+  document.getElementById('mTotal').textContent=totalClicks;
+  document.getElementById('mFraud').textContent=fraudClicks;
+  const pct=Math.max(0,(budget/BUDGET)*100);
+  document.getElementById('mBudget').textContent='$'+budget.toFixed(0);
+  document.getElementById('mBudget').className='val '+(pct>50?'green':pct>20?'amber':'red');
+  document.getElementById('mStolen').textContent=stolenSet.size;
+  document.getElementById('budgetBar').style.width=pct+'%';
+  document.getElementById('budgetBar').style.background=pct>50?'#639922':pct>20?'#BA7517':'#E24B4A';
+  document.getElementById('budgetPct').textContent=pct.toFixed(0)+'%';
+}
+
+function addLog(ip,type){
+  const body=document.getElementById('logBody');
+  const div=document.createElement('div');
+  div.className='log-row';
+  const badge=type==='n'?'<span class="badge n">Normal</span>':type==='t1'?'<span class="badge t1">Threat 1</span>':'<span class="badge t2">Threat 2</span>';
+  div.innerHTML=`<span style="font-family:var(--font-mono);color:var(--color-text-secondary)">${nowStr()}</span><span style="font-family:var(--font-mono);font-size:10px">${ip}</span>${badge}`;
+  body.insertBefore(div,body.firstChild);
+  if(body.children.length>40)body.removeChild(body.lastChild);
+}
+
+function updateStatus(){
+  const dot=document.getElementById('statusDot');
+  const lbl=document.getElementById('statusLabel');
+  if(!normalActive&&!t1Active&&!t2Active){dot.className='status-dot idle';lbl.textContent='Simulation idle';return;}
+  if(t2Active){dot.className='status-dot t2on';lbl.textContent='Under botnet attack';}
+  else if(t1Active){dot.className='status-dot t1on';lbl.textContent='Under competitive attack';}
+  else{dot.className='status-dot running';lbl.textContent='Normal traffic running';}
+}
+
+function startNormal(){
+  if(normalActive)return;
+  normalActive=true;
+  if(!chart)initChart();
+  updateStatus();
+  function tick(){
+    if(!normalActive)return;
+    const ip=`172.16.${ri(1,99)}.${ri(1,255)}`;
+    normalPool.push(ip);
+    if(spendCPC()){addLog(ip,'n');pushChartPoint('n');}
+    normalTimer=setTimeout(tick,ri(1500,4000));
+  }
+  tick();
+  document.getElementById('btnNormal').textContent='Normal traffic running';
+  document.getElementById('btnNormal').disabled=true;
+}
+
+function toggleT1(){
+  if(!normalActive){startNormal();}
+  if(!chart)initChart();
+  t1Active=!t1Active;
+  const btn=document.getElementById('btnT1');
+  if(t1Active){
+    btn.className='ctrl active-t1';
+    btn.textContent='Stop threat 1';
+    updateStatus();
+    function tick(){
+      if(!t1Active)return;
+      const rate=parseInt(document.getElementById('t1Rate').value);
+      const ip=randEl(T1IPS);
+      if(spendCPC()){fraudClicks++;t1Clicks++;addLog(ip,'t1');pushChartPoint('t1');}
+      document.getElementById('t1Count').textContent=t1Clicks+' clicks sent';
+      t1Timer=setTimeout(tick,ri(Math.max(200,600-rate*80),Math.max(600,1800-rate*200)));
+    }
+    tick();
+  } else {
+    btn.className='ctrl';btn.textContent='Launch threat 1';
+    clearTimeout(t1Timer);updateStatus();
+  }
+}
+
+function toggleT2(){
+  if(!normalActive){startNormal();}
+  if(!chart)initChart();
+  t2Active=!t2Active;
+  const btn=document.getElementById('btnT2');
+  if(t2Active){
+    btn.className='ctrl active-t2';
+    btn.textContent='Stop threat 2';
+    updateStatus();
+    function tick(){
+      if(!t2Active)return;
+      const rate=parseInt(document.getElementById('t2Rate').value);
+      const ip=randEl(T2IPS);
+      if(spendCPC()){
+        fraudClicks++;t2Clicks++;t2SinceLastSteal++;
+        addLog(ip,'t2');pushChartPoint('t2');
+        if(t2SinceLastSteal>=15&&normalPool.length>0){
+          const victim=normalPool[ri(0,normalPool.length-1)];
+          stolenSet.add(victim);
+          t2SinceLastSteal=0;
+          updateStolenUI();
+        }
+      }
+      document.getElementById('t2Count').textContent=t2Clicks+` clicks · ${stolenSet.size} IPs stolen`;
+      t2Timer=setTimeout(tick,ri(Math.max(80,400-rate*60),Math.max(300,1000-rate*150)));
+    }
+    tick();
+  } else {
+    btn.className='ctrl';btn.textContent='Launch threat 2';
+    clearTimeout(t2Timer);updateStatus();
+  }
+}
+
+function updateStolenUI(){
+  const box=document.getElementById('stolenBox');
+  const tags=document.getElementById('stolenTags');
+  if(stolenSet.size>0){
+    box.style.display='block';
+    tags.innerHTML='';
+    [...stolenSet].slice(-8).forEach(ip=>{
+      const s=document.createElement('span');
+      s.className='stolen-tag';s.textContent=ip;tags.appendChild(s);
+    });
+  }
+  document.getElementById('mStolen').textContent=stolenSet.size;
+}
+
+function resetAll(){
+  clearTimeout(normalTimer);clearTimeout(t1Timer);clearTimeout(t2Timer);
+  normalActive=false;t1Active=false;t2Active=false;
+  budget=BUDGET;totalClicks=0;fraudClicks=0;t1Clicks=0;t2Clicks=0;
+  normalPool=[];stolenSet=new Set();t2SinceLastSteal=0;
+  chartLabels=[];chartNormal=[];chartT1=[];chartT2=[];
+  if(chart){chart.destroy();chart=null;}
+  document.getElementById('logBody').innerHTML='';
+  document.getElementById('t1Count').textContent='0 clicks sent';
+  document.getElementById('t2Count').textContent='0 clicks · 0 IPs stolen';
+  document.getElementById('stolenBox').style.display='none';
+  document.getElementById('stolenTags').innerHTML='';
+  document.getElementById('btnNormal').textContent='Start normal traffic';
+  document.getElementById('btnNormal').disabled=false;
+  document.getElementById('btnT1').className='ctrl';document.getElementById('btnT1').textContent='Launch threat 1';
+  document.getElementById('btnT2').className='ctrl';document.getElementById('btnT2').textContent='Launch threat 2';
+  updateMetrics();updateStatus();
+}
+</script>
