@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdsArmor | Integrated Click-Fraud Defense Demo</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    :root {
+      --bg: #030712;
+      --card: #0f172a;
+      --card-2: #111827;
+      --border: #1e293b;
+      --primary: #38bdf8;
+      --secondary: #818cf8;
+      --l1-color: #fbbf24;
+      --l2-color: #f87171;
+      --l3-color: #818cf8;
+      --success: #22c55e;
+      --danger: #f87171;
+      --accent: #fbbf24;
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .nav-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .nav-btn, .btn {
+      border: none;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.25s ease;
+    }
+
+    .nav-btn {
+      background: #111827;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .nav-btn:hover, .btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #000;
+    }
+
+    .btn-secondary {
+      background: #111827;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    header.top-header {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    header.top-header h1 {
+      margin: 0;
+      letter-spacing: -1px;
+      font-size: 34px;
+    }
+
+    header.top-header .sub {
+      color: var(--text-dim);
+      margin-top: 6px;
+      font-size: 15px;
+    }
+
+    .section-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      margin: 0 0 16px 0;
+      color: var(--primary);
+      letter-spacing: -0.3px;
+    }
+
+    .section-subtitle {
+      color: var(--text-dim);
+      margin-bottom: 22px;
+      font-size: 14px;
+    }
+
+    /* OVERVIEW REFINED */
+    .overview-hero {
+      background: linear-gradient(145deg, #111827, #0b1220);
+      border: 1px solid var(--primary);
+      border-radius: 24px;
+      padding: 36px 32px;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .overview-hero h2 {
+      margin: 0 0 10px 0;
+      font-size: 34px;
+      color: var(--primary);
+      letter-spacing: -0.8px;
+    }
+
+    .overview-hero p {
+      margin: 0 auto;
+      color: var(--text-dim);
+      font-size: 15px;
+      max-width: 820px;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    .overview-arch-wrap {
+      margin-top: 32px;
+    }
+
+    .overview-arch-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+    }
+
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .arch-node {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px 16px;
+      text-align: center;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: 0.25s ease;
+    }
+
+    .arch-node:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary);
+    }
+
+    .arch-node h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+
+    .arch-node p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .node-l1 { border-color: rgba(251,191,36,0.35); }
+    .node-l2 { border-color: rgba(248,113,113,0.35); }
+    .node-l3 { border-color: rgba(129,140,248,0.35); }
+
+    .layer-role-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+      margin-bottom: 24px;
+    }
+
+    .mini-note {
+      background: rgba(56,189,248,0.05);
+      border: 1px solid rgba(56,189,248,0.2);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .mini-note h4 {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      text-transform: uppercase;
+      color: var(--primary);
+      letter-spacing: 0.5px;
+    }
+
+    .mini-note p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .overview-secondary {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 20px;
+      margin-top: 28px;
+    }
+
+    .overview-block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+    }
+
+    .overview-block h3 {
+      margin: 0 0 14px 0;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--primary);
+    }
+
+    .overview-block p, .overview-block ul {
+      margin: 0;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+
+    .overview-block ul {
+      padding-left: 18px;
+      line-height: 1.7;
+    }
+
+    .results-snapshot {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .snapshot-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .snapshot-val {
+      display: block;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .snapshot-lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      letter-spacing: 0.8px;
+    }
+
+    .coverage-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .coverage-chip {
+      background: rgba(129,140,248,0.08);
+      border: 1px solid rgba(129,140,248,0.2);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    /* FULL PIPELINE */
+    .control-panel {
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      padding: 25px;
+      border-radius: 20px;
+      border: 1px solid var(--primary);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn-play {
+      background: var(--primary);
+      color: #000;
+    }
+
+    .btn-pause {
+      background: #1e293b;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      display: none;
+    }
+
+    .decision-bridge {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: rgba(0,0,0,0.3);
+      padding: 15px;
+      border-radius: 12px;
+    }
+
+    .bridge-step {
+      padding: 4px 8px;
+    }
+
+    .b-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .b-val {
+      font-size: 16px;
+      font-weight: bold;
+      display: block;
+      margin-top: 5px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .summary-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .summary-card h3 {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .st-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary);
+      display: block;
+    }
+
+    .st-lbl {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 15px;
+    }
+
+    .log-stream {
+      height: 220px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 11px;
+      background: #000;
+      padding: 10px;
+      color: #4ade80;
+      border-radius: 8px;
+    }
+
+    #results-area {
+      display: none;
+      margin-top: 40px;
+      border-top: 1px solid var(--border);
+      padding-top: 30px;
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+
+    .evidence-card h4 {
+      font-size: 11px;
+      margin: 0 0 8px 0;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .evidence-card img {
+      width: 100%;
+      border-radius: 6px;
+      cursor: zoom-in;
+      border: 1px solid var(--border);
+      transition: 0.2s;
+      background: #000;
+    }
+
+    .evidence-card img:hover {
+      border-color: var(--primary);
+    }
+
+    /* LAYER 2 */
+    .l2-header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+
+    .l2-header h1 {
+      margin: 0;
+      font-size: 28px;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+
+    .l2-subtitle {
+      color: var(--text-dim);
+      font-size: 16px;
+      margin-top: 5px;
+    }
+
+    .l2-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-card .stat-val {
+      display: block;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 5px;
+    }
+
+    .stat-card .stat-lbl {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    .l2-main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-bottom: 25px;
+    }
+
+    .l2-card {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .l2-card h2 {
+      font-size: 18px;
+      margin: 0 0 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--secondary);
+    }
+
+    .l2-card h2::before {
+      content: "";
+      width: 4px;
+      height: 18px;
+      background: var(--secondary);
+      border-radius: 2px;
+    }
+
+    table.feature-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .feature-table th {
+      text-align: left;
+      padding: 12px;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .feature-table td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .f-tag {
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    .signal-high {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .flow-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+    }
+
+    .flow-step {
+      background: #1e293b;
+      border: 1px solid var(--secondary);
+      padding: 12px 20px;
+      border-radius: 8px;
+      width: 80%;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .arrow {
+      color: var(--secondary);
+      font-size: 18px;
+    }
+
+    .mapping-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .map-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      border: 1px solid transparent;
+    }
+
+    .risk-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      width: 170px;
+      text-align: center;
+    }
+
+    .low {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .med {
+      background: rgba(251, 191, 36, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .high {
+      background: rgba(248, 113, 113, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+
+    .img-container {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      padding: 10px;
+      cursor: zoom-in;
+      position: relative;
+    }
+
+    .img-container:hover::after {
+      content: "Click to Expand";
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 10px;
+      background: rgba(0,0,0,0.7);
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: var(--primary);
+    }
+
+    .evidence-img {
+      max-width: 100%;
+      max-height: 280px;
+      object-fit: contain;
+    }
+
+    .trace-tag {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      background: #000;
+      padding: 15px;
+      border-radius: 8px;
+      color: #4ade80;
+      border: 1px solid #333;
+      line-height: 1.6;
+    }
+
+    .l2-footer {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .insight-box {
+      background: rgba(56, 189, 248, 0.05);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .tradeoff-box {
+      background: rgba(248, 113, 113, 0.05);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .insight-box h3, .tradeoff-box h3 {
+      font-size: 14px;
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .footer-text {
+      font-size: 13.5px;
+      color: var(--text-dim);
+      margin: 0;
+    }
+
+    #modal {
+      display:none;
+      position:fixed;
+      top:0; left:0;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,0.92);
+      z-index:1000;
+      justify-content:center;
+      align-items:center;
+      cursor: zoom-out;
+      padding: 20px;
+    }
+
+    #modal img {
+      max-width: 92%;
+      max-height: 92%;
+      border: 2px solid var(--primary);
+      background: #000;
+    }
+
+    @media (max-width: 1100px) {
+      .arch-grid,
+      .layer-role-grid,
+      .overview-secondary,
+      .summary-grid,
+      .grid-2,
+      .evidence-grid,
+      .l2-summary-grid,
+      .l2-main-grid,
+      .l2-footer {
+        grid-template-columns: 1fr !important;
+      }
+
+      .results-snapshot,
+      .coverage-grid {
+        grid-template-columns: 1fr 1fr !important;
+      }
+
+      .decision-bridge {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .mini-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .results-snapshot,
+      .coverage-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .cta-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .nav-bar {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header class="top-header">
+      <h1>AdsArmor</h1>
+      <div class="sub">Integrated Click-Fraud Defense Demo for PPC Advertising Systems</div>
+    </header>
+
+    <div class="nav-bar">
+      <button class="nav-btn" onclick="showSection('overview-section')">Overview</button>
+      <button class="nav-btn" onclick="showSection('pipeline-section')">Full Pipeline</button>
+      <button class="nav-btn" onclick="showSection('layer2-section')">Layer 2 Detail</button>
+    </div>
+
+    <section id="overview-section">
+      <div class="overview-hero">
+        <h2>Three-Layer Defense Architecture</h2>
+        <p>
+          AdsArmor addresses click fraud in pay-per-click advertising systems by combining
+          early-stage filtering, behavioural ML detection, and budget-aware billing control
+          to reduce invalid spend and preserve budget integrity.
+        </p>
+
+        <div class="cta-row">
+          <button class="btn btn-primary" onclick="showSection('pipeline-section')">View Full Pipeline Demo</button>
+          <button class="btn btn-secondary" onclick="showSection('layer2-section')">Focus on Layer 2</button>
+          <button class="btn btn-ghost" onclick="goToEvidence()">Open Evidence Gallery</button>
+        </div>
+
+        <div class="overview-arch-wrap">
+          <div class="overview-arch-title">System Overview</div>
+          <div class="arch-grid">
+            <div class="arch-node">
+              <h3>Incoming Click Stream</h3>
+              <p>Normal and suspicious traffic enters the system as raw click interactions.</p>
+            </div>
+
+            <div class="arch-node node-l1">
+              <h3>Layer 1</h3>
+              <p>Early-stage filtering through rate limiting and challenge-based access control.</p>
+            </div>
+
+            <div class="arch-node node-l2">
+              <h3>Layer 2</h3>
+              <p>Behavioural ML detection using feature extraction, fraud scoring, and anomaly analysis.</p>
+            </div>
+
+            <div class="arch-node node-l3">
+              <h3>Layer 3</h3>
+              <p>Budget-aware billing control through withholding, capping, and mitigation actions.</p>
+            </div>
+
+            <div class="arch-node">
+              <h3>Billing Outcomes</h3>
+              <p>Final actions preserve budget integrity while supporting service continuity.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer-role-grid">
+        <div class="mini-note">
+          <h4>Layer 1 Role</h4>
+          <p>Filters obvious high-frequency abuse before deeper behavioural analysis.</p>
+        </div>
+        <div class="mini-note">
+          <h4>Layer 2 Role</h4>
+          <p>Transforms click behaviour into interpretable fraud scores and risk levels.</p>
+        </div>
+        <div class="mini-note">
+          <h4>Layer 3 Role</h4>
+          <p>Converts risk into practical billing actions such as blocking, withholding, and capping.</p>
+        </div>
+      </div>
+
+      <div class="overview-secondary">
+        <div class="overview-block">
+          <h3>How to Explore This Demo</h3>
+          <ul>
+            <li>Start from <b>Overview</b> for the full defense architecture.</li>
+            <li>Open <b>Full Pipeline</b> to observe end-to-end decision flow.</li>
+            <li>Open <b>Layer 2 Detail</b> to inspect behavioural ML detection.</li>
+            <li>Open <b>Evidence Gallery</b> to review attack and defense outputs.</li>
+          </ul>
+
+          <h3 style="margin-top:20px;">Threat Coverage</h3>
+          <div class="coverage-grid">
+            <div class="coverage-chip">Competitive Click Fraud</div>
+            <div class="coverage-chip">Bot-driven Click Fraud</div>
+            <div class="coverage-chip">Behavioural Anomaly Detection</div>
+            <div class="coverage-chip">Budget Depletion Mitigation</div>
+          </div>
+        </div>
+
+        <div class="overview-block">
+          <h3>Key Results Snapshot</h3>
+          <div class="results-snapshot">
+            <div class="snapshot-card">
+              <span class="snapshot-val">253</span>
+              <span class="snapshot-lbl">Incoming Clicks</span>
+            </div>
+            <div class="snapshot-card">
+              <span class="snapshot-val">39</span>
+              <span class="snapshot-lbl">IP Profiles</span>
+            </div>
+            <div class="snapshot-card">
+              <span class="snapshot-val">6</span>
+              <span class="snapshot-lbl">High-Risk IPs</span>
+            </div>
+            <div class="snapshot-card">
+              <span class="snapshot-val">£110</span>
+              <span class="snapshot-lbl">Withheld Amount</span>
+            </div>
+            <div class="snapshot-card">
+              <span class="snapshot-val">£30</span>
+              <span class="snapshot-lbl">ADV1–A1 Budget Left</span>
+            </div>
+            <div class="snapshot-card">
+              <span class="snapshot-val">118</span>
+              <span class="snapshot-lbl">Charged Clicks</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pipeline-section" class="hidden">
+      <div class="section-card">
+        <h2 class="section-title">Full Pipeline Demo</h2>
+        <div class="section-subtitle">
+          End-to-end visualisation of click-level traffic processing, behavioural profiling, and downstream billing actions.
+        </div>
+
+        <div class="control-panel">
+          <div class="btn-group">
+            <button class="btn btn-play" id="btnRun">START PIPELINE</button>
+            <button class="btn btn-pause" id="btnPause">PAUSE</button>
+          </div>
+          <div class="decision-bridge">
+            <div class="bridge-step" style="border-right: 1px solid var(--border);">
+              <span class="b-label">Live IP</span><span id="b-ip" class="b-val">---</span>
+            </div>
+            <div class="bridge-step" style="border-right: 1px solid var(--border);">
+              <span class="b-label">L1 Status</span><span id="b-l1" class="b-val">WAITING</span>
+            </div>
+            <div class="bridge-step" style="border-right: 1px solid var(--border);">
+              <span class="b-label">L2 Risk Score</span><span id="b-l2" class="b-val">0.000</span>
+            </div>
+            <div class="bridge-step">
+              <span class="b-label">Billing Action</span><span id="b-l3" class="b-val">IDLE</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <h3 style="color:var(--l1-color)">Layer 1: Real-time Traffic</h3>
+            <div class="mini-stats">
+              <div class="st-item"><span class="st-val" id="stat-total">0</span><span class="st-lbl">Total N</span></div>
+              <div class="st-item"><span class="st-val" style="color:var(--l2-color)" id="stat-l1block">0</span><span class="st-lbl">L1 Blocked</span></div>
+              <div class="st-item"><span class="st-val" id="stat-passed">0</span><span class="st-lbl">L1 Passed</span></div>
+              <div class="st-item"><span class="st-val" id="stat-remain">253</span><span class="st-lbl">Queue</span></div>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <h3 style="color:var(--l2-color)">Layer 2: IP Behavior Profile</h3>
+            <div class="mini-stats">
+              <div class="st-item"><span class="st-val">39</span><span class="st-lbl">Profiles</span></div>
+              <div class="st-item"><span class="st-val" style="color:#f87171">6</span><span class="st-lbl">High Risk</span></div>
+              <div class="st-item"><span class="st-val" style="color:#818cf8">10</span><span class="st-lbl">Med Risk</span></div>
+              <div class="st-item"><span class="st-val" style="color:#22c55e">23</span><span class="st-lbl">Low Risk</span></div>
+            </div>
+          </div>
+        </div>
+
+        <section class="grid-2">
+          <div class="card">
+            <h3>Inference Stream</h3>
+            <div class="log-stream" id="log"></div>
+          </div>
+          <div class="card">
+            <h3>Live Billing Distribution</h3>
+            <div style="height: 180px;"><canvas id="chart-actions"></canvas></div>
+          </div>
+        </section>
+
+        <div style="text-align:center; margin-top: 25px;">
+          <button class="btn btn-secondary" id="btnResults" style="display:none;">VIEW CROSS-VALIDATED EVIDENCE</button>
+        </div>
+
+        <div id="results-area">
+          <h2 style="border-left: 4px solid var(--primary); padding-left: 15px; margin-bottom: 25px;">Evidence & Audit Logs</h2>
+          <div class="evidence-grid">
+            <div class="card evidence-card"><h4>Budget Depletion</h4><img src="attack_budget_depletion.png" onclick="zoom(this)"></div>
+            <div class="card evidence-card"><h4>Click Frequency</h4><img src="attack_click_frequency.png" onclick="zoom(this)"></div>
+            <div class="card evidence-card"><h4>Interval Pattern</h4><img src="attack_interval_distribution.png" onclick="zoom(this)"></div>
+            <div class="card evidence-card"><h4>L2 Fraud Scores</h4><img src="layer2_fraud_scores.png" onclick="zoom(this)"></div>
+            <div class="card evidence-card"><h4>Action Distribution</h4><img src="defense_action_distribution.png" onclick="zoom(this)"></div>
+            <div class="card evidence-card"><h4>Mitigation Impact</h4><img src="attack_vs_defense_budget.png" onclick="zoom(this)"></div>
+            <div class="card evidence-card"><h4>Budget Loss Bar</h4><img src="attack_budget_bar.png" onclick="zoom(this)"></div>
+            <div class="card evidence-card"><h4>Post-Defense Budget</h4><img src="budget_after_defense.png" onclick="zoom(this)"></div>
+          </div>
+
+          <footer class="card" style="margin-top:20px; border: 1px solid var(--primary); background: rgba(56, 189, 248, 0.05);">
+            <h3 style="margin-top:0; font-size: 16px;">Data Integrity Statement</h3>
+            <p style="font-size: 13px; color: var(--text-dim); line-height: 1.6;">
+              The metrics above are cross-validated between <b>click-level logs</b> (N=253) and
+              <b>IP behavioural profiles</b> (N=39). The £110.00 withheld amount represents suspicious activities
+              <b>flagged by Layer 2 behavioural analysis</b> and <b>withheld by the downstream billing logic</b>
+              pending manual audit.
+            </p>
+          </footer>
+        </div>
+      </div>
+    </section>
+
+    <section id="layer2-section" class="hidden">
+      <div class="section-card">
+        <div class="l2-header">
+          <h1>Layer 2: Behavioural ML Detection</h1>
+          <div class="l2-subtitle">From click behaviour to fraud score and risk-based decision</div>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+          <button class="btn btn-secondary" onclick="showSection('overview-section')">← Back to Overview</button>
+        </div>
+
+        <div class="l2-summary-grid">
+          <div class="stat-card"><span class="stat-lbl">Input Source</span><span class="stat-val" style="font-size: 18px;">Layer 1 Passed Traffic</span></div>
+          <div class="stat-card"><span class="stat-lbl">IP Profiles</span><span class="stat-val">39</span></div>
+          <div class="stat-card"><span class="stat-lbl">High-Risk IPs</span><span class="stat-val" style="color: var(--danger);">6</span></div>
+          <div class="stat-card"><span class="stat-lbl">Med-Risk IPs</span><span class="stat-val" style="color: var(--accent);">10</span></div>
+          <div class="stat-card"><span class="stat-lbl">Mean Fraud Score</span><span class="stat-val">0.2815</span></div>
+        </div>
+
+        <div class="l2-main-grid">
+          <div class="l2-card">
+            <h2>Feature Extraction Panel</h2>
+            <table class="feature-table">
+              <thead>
+                <tr><th>Feature</th><th>Meaning</th><th>Fraud Signal</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><span class="f-tag">Click Count</span></td><td>Total requests from IP</td><td class="signal-high">High frequency</td></tr>
+                <tr><td><span class="f-tag">Mean Interval</span></td><td>Avg time between clicks</td><td class="signal-high">Low (automated pattern)</td></tr>
+                <tr><td><span class="f-tag">Dwell Time</span></td><td>Post-click engagement</td><td class="signal-high">Near zero</td></tr>
+                <tr><td><span class="f-tag">Ad Concentration</span></td><td>Share of clicks on 1 ad</td><td class="signal-high">Single-target</td></tr>
+                <tr><td><span class="f-tag">Challenge Count</span></td><td>L1 Warning history</td><td class="signal-high">Repetitive</td></tr>
+              </tbody>
+            </table>
+
+            <div style="margin-top:25px;">
+              <div class="stat-lbl" style="margin-bottom:10px;">Illustrative Risk Trace:</div>
+              <div class="trace-tag">
+                [IDENTIFIED] IP: 45.12.8.1 <br>
+                [FEATURES]  Interval: 0.12s | Dwell: 0.2s | Concentration: 92%<br>
+                [INFERENCE] Isolation Score: High Anomaly | Fraud Score: 0.945<br>
+                [ACTION]    Classification -> High Risk (Block & Withhold)
+              </div>
+            </div>
+          </div>
+
+          <div class="l2-card">
+            <h2>ML Core Logic Panel</h2>
+            <div class="flow-container">
+              <div class="flow-step">Input Click Data Stream</div>
+              <div class="arrow">↓</div>
+              <div class="flow-step" style="border-color: var(--primary); color: var(--primary);">Behavioural Feature Extraction</div>
+              <div class="arrow">↓</div>
+              <div class="flow-step" style="border-style: dashed; background: rgba(129, 140, 248, 0.1);">Rule-based Scoring + Isolation Forest</div>
+              <div class="arrow">↓</div>
+              <div class="flow-step" style="background: var(--secondary); color: white; font-weight: bold;">Final Fraud Score (0.0 - 1.0)</div>
+              <div class="arrow">↓</div>
+              <div class="flow-step">Risk Level Assignment</div>
+            </div>
+            <div style="margin-top: 15px; font-size: 12px; color: var(--text-dim);">
+              • <b>Aggregated:</b> Transforms click-level logs into IP-level behavioural profiles.<br>
+              • <b>Detection:</b> Combines interpretable rules with anomaly detection.
+            </div>
+          </div>
+        </div>
+
+        <div class="l2-main-grid">
+          <div class="l2-card">
+            <h2>Output & Decision Mapping</h2>
+            <div class="mapping-grid">
+              <div class="map-item">
+                <span style="font-weight: 500;">Low Risk</span>
+                <span class="risk-badge low">Allow</span>
+              </div>
+              <div class="map-item">
+                <span style="font-weight: 500;">Medium Risk</span>
+                <span class="risk-badge med">Flag for Review</span>
+              </div>
+              <div class="map-item">
+                <span style="font-weight: 500;">High Risk</span>
+                <span class="risk-badge high">Block & Withhold</span>
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-dim); margin-top: 25px;">
+              * Risk classification determines the downstream billing mitigation strategy in Layer 3.
+            </p>
+          </div>
+
+          <div class="l2-card">
+            <h2>Evidence: Fraud Score Distribution</h2>
+            <div class="img-container" onclick="openModalFromId('evidenceImgL2')">
+              <img src="layer2_fraud_scores.png" id="evidenceImgL2" alt="Layer 2 Fraud Scores Distribution" class="evidence-img">
+            </div>
+            <p style="font-size: 12px; color: var(--text-dim); margin-top: 15px; text-align: center;">
+              Empirical distribution of fraud scores across the 39 analysed IP profiles. (Click to Zoom)
+            </p>
+          </div>
+        </div>
+
+        <div class="l2-footer">
+          <div class="insight-box">
+            <h3 style="color: var(--primary);">Key Insights</h3>
+            <p class="footer-text">
+              Layer 2 identifies suspicious behavioural patterns that are not fully removed by Layer 1.
+              By transforming behavioural signals into a continuous fraud score, it improves interpretability
+              and supports downstream billing protection.
+            </p>
+          </div>
+
+          <div class="tradeoff-box">
+            <h3 style="color: var(--danger);">Trade-off</h3>
+            <p class="footer-text">
+              Higher sensitivity improves fraud protection but may affect a small amount of high-frequency normal traffic.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="modal" onclick="closeModal()">
+    <img id="modalImg" src="" alt="Zoomed Evidence" />
+  </div>
+
+  <script>
+    function showSection(sectionId) {
+      const ids = ['overview-section', 'pipeline-section', 'layer2-section'];
+      ids.forEach(id => document.getElementById(id).classList.add('hidden'));
+      document.getElementById(sectionId).classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goToEvidence() {
+      showSection('pipeline-section');
+      setTimeout(() => {
+        document.getElementById('results-area').style.display = 'block';
+        document.getElementById('results-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    }
+
+    function zoom(img) {
+      document.getElementById('modal').style.display = 'flex';
+      document.getElementById('modalImg').src = img.src;
+    }
+
+    function openModalFromId(id) {
+      zoom(document.getElementById(id));
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === "Escape") closeModal();
+    });
+
+    const TARGETS = { block: 20, cap: 60, withhold: 55, charge: 118 };
+    const TARGET_TOTAL = 253;
+    let current = { total: 0, block: 0, cap: 0, charge: 0, withhold: 0, passed: 0 };
+    let isPaused = false;
+    let timer = null;
+
+    const ctx = document.getElementById('chart-actions').getContext('2d');
+    const chartAct = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Charge', 'Withhold', 'Cap Block', 'L1 Block'],
+        datasets: [{
+          data: [0, 0, 0, 0],
+          backgroundColor: ['#22c55e', '#818cf8', '#fbbf24', '#f87171'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { color: '#94a3b8', font: { size: 10 } }
+          }
+        }
+      }
+    });
+
+    function genIP() {
+      return `${Math.floor(Math.random()*223)+1}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+    }
+
+    function step() {
+      if (isPaused) return;
+      if (current.total >= TARGET_TOTAL) {
+        clearInterval(timer);
+        document.getElementById('btnRun').innerText = 'PIPELINE SEALED';
+        document.getElementById('btnPause').style.display = 'none';
+        document.getElementById('btnResults').style.display = 'inline-block';
+        return;
+      }
+
+      current.total++;
+      let ip = genIP(), l1 = 'Passed', l2 = '0.000', l3 = '', color = '#fff';
+
+      const choices = [
+        { id: 'block', l1: 'Blocked', scoreRange: [0.85, 0.99], act: 'L1_BLOCK', col: '#f87171' },
+        { id: 'cap', l1: 'Passed', scoreRange: [0.71, 0.84], act: 'CAP_BLOCK', col: '#fbbf24' },
+        { id: 'withhold', l1: 'Passed', scoreRange: [0.45, 0.70], act: 'WITHHOLD', col: '#818cf8' },
+        { id: 'charge', l1: 'Passed', scoreRange: [0.01, 0.15], act: 'CHARGE', col: '#22c55e' }
+      ];
+
+      choices.sort(() => Math.random() - 0.5);
+
+      for (const c of choices) {
+        if (current[c.id] < TARGETS[c.id]) {
+          current[c.id]++;
+          if (c.l1 === 'Passed') current.passed++;
+          l1 = c.l1;
+          l2 = (c.scoreRange[0] + Math.random() * (c.scoreRange[1] - c.scoreRange[0])).toFixed(3);
+          l3 = c.act;
+          color = c.col;
+          break;
+        }
+      }
+
+      document.getElementById('b-ip').innerText = ip;
+      document.getElementById('b-l1').innerText = l1;
+      document.getElementById('b-l1').style.color = (l1 === 'Blocked') ? 'var(--l2-color)' : 'var(--success)';
+      document.getElementById('b-l2').innerText = l2;
+      document.getElementById('b-l3').innerText = l3;
+      document.getElementById('b-l3').style.color = color;
+
+      document.getElementById('stat-total').innerText = current.total;
+      document.getElementById('stat-remain').innerText = TARGET_TOTAL - current.total;
+      document.getElementById('stat-l1block').innerText = current.block;
+      document.getElementById('stat-passed').innerText = current.passed;
+
+      const log = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.innerHTML = `<span style="color:${color}">[${l3.padEnd(10)}]</span> IP: ${ip.padEnd(15)} | L1: ${l1.padEnd(7)} | L2: ${l2}`;
+      log.prepend(entry);
+      if (log.childNodes.length > 10) log.lastChild.remove();
+
+      chartAct.data.datasets[0].data = [current.charge, current.withhold, current.cap, current.block];
+      chartAct.update('none');
+    }
+
+    document.getElementById('btnRun').addEventListener('click', () => {
+      if (timer) return;
+      document.getElementById('btnRun').disabled = true;
+      document.getElementById('btnRun').innerText = 'ANALYZING...';
+      document.getElementById('btnPause').style.display = 'inline-block';
+      timer = setInterval(step, 50);
+    });
+
+    document.getElementById('btnPause').addEventListener('click', () => {
+      isPaused = !isPaused;
+      document.getElementById('btnPause').innerText = isPaused ? 'RESUME' : 'PAUSE';
+      document.getElementById('btnPause').style.background = isPaused ? 'var(--success)' : '#1e293b';
+      document.getElementById('btnPause').style.color = isPaused ? '#000' : 'var(--primary)';
+    });
+
+    document.getElementById('btnResults').addEventListener('click', () => {
+      document.getElementById('results-area').style.display = 'block';
+      window.scrollTo({ top: document.getElementById('results-area').offsetTop - 20, behavior: 'smooth' });
+    });
+  </script>
+</body>
+</html>
